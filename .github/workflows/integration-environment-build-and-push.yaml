@@ -97,6 +97,11 @@ jobs:
           context: ./.envcontainer
           file: ./.envcontainer/App.Dockerfile
           tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
+          build-args: |
+            BASE_REPOSITORY=${{ vars.REPOSITORY }}
+            BASE_IMAGE=${{ vars.IMAGE }}
+            BASE_ENVIRONMENT=base
+            BASE_RELEASE=latest
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
 
       - name: Upload Image as Artifact
