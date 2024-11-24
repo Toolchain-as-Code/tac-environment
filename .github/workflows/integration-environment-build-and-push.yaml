@@ -111,6 +111,7 @@ jobs:
           push: false
           context: ./.envcontainer
           file: ./.envcontainer/App.Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
           build-args: |
             BASE_REPOSITORY=${{ vars.REPOSITORY }}
