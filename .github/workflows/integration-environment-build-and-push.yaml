@@ -69,7 +69,7 @@ jobs:
           path: ${{ runner.temp }}/artifacts/base-environment.tar
 
   push_base:
-    name: Push Integration Environment
+    name: Push Base Environment
     runs-on: ubuntu-latest
     needs: build_base
     permissions:
@@ -106,25 +106,9 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Download Image as Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: base-environment
-          path: ${{ runner.temp }}/artifacts
-
       - name: Setup Docker Buildx
         id: setup_buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Load Image from Artifact
-        run: |
-          docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
-          docker image ls -a
-
-      - name: Re-Tag Image from Artifact
-        run: |
-          docker tag ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
-          docker image ls -a
 
       - name: Create Artifact Directory
         id: create_artifact_dir
@@ -150,8 +134,6 @@ jobs:
             BASE_ENVIRONMENT=base
             BASE_RELEASE=latest
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
-          cache-from: |
-            type=local,src=${{ runner.temp }}/artifacts
 
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
