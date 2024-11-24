@@ -20,8 +20,8 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build Base and Integration Environment
+  build_base:
+    name: Build Base Environment
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,6 +29,10 @@ jobs:
       - name: Checkout Repository
         id: checkout
         uses: actions/checkout@v4
+
+      - name: Create Artifact Directory
+        id: create_artifact_dir
+        run: mkdir -p ${{ runner.temp }}/artifacts
 
       - name: Setup Docker Buildx
         id: setup_buildx
@@ -43,8 +47,8 @@ jobs:
           echo "REPOSITORY        = ${{ vars.REPOSITORY }}"
           echo "IMAGE             = ${{ vars.IMAGE }}"
 
-      - name: Build Base Image
-        id: build_base
+      - name: Build Image
+        id: build
         uses: docker/build-push-action@v6
         with:
           push: false
@@ -56,11 +60,83 @@ jobs:
             BASE_IMAGE=${{ vars.BASE_IMAGE }}
             BASE_ENVIRONMENT=${{ vars.BASE_ENVIRONMENT }}
             DENO_VERSION=${{ vars.DENO_VERSION }}
-          load: true
-          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=${{ runner.temp }}/artifacts/base-environment.tar
 
-      - name: Build Environment Image
-        id: build_environment
+      - name: Upload Image as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: base-environment
+          path: ${{ runner.temp }}/artifacts/base-environment.tar
+
+  push_base:
+    name: Push Integration Environment
+    runs-on: ubuntu-latest
+    needs: build_base
+    permissions:
+      contents: read
+    steps:
+      - name: Download Image as Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: base-environment
+          path: ${{ runner.temp }}/artifacts
+
+      - name: Load Image from Artifact
+        run: |
+          docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
+          docker image ls -a
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Push Image to Docker Hub
+        run: docker push ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
+
+  build:
+    name: Build Integration Environment
+    runs-on: ubuntu-latest
+    needs: push_base
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Download Image as Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: base-environment
+          path: ${{ runner.temp }}/artifacts
+
+      - name: Setup Docker Buildx
+        id: setup_buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Load Image from Artifact
+        run: |
+          docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
+          docker image ls -a
+
+      - name: Re-Tag Image from Artifact
+        run: |
+          docker tag ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
+          docker image ls -a
+
+      - name: Create Artifact Directory
+        id: create_artifact_dir
+        run: mkdir -p ${{ runner.temp }}/artifacts
+
+      - name: Debug Build Arguments
+        run: |
+          echo "REPOSITORY        = docker.io/${{ vars.REPOSITORY }}"
+          echo "IMAGE             = ${{ vars.IMAGE }}"
+
+      - name: Build Image
+        id: build
         uses: docker/build-push-action@v6
         with:
           pull: false
@@ -69,13 +145,13 @@ jobs:
           file: ./.envcontainer/App.Dockerfile
           tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
           build-args: |
-            BASE_REPOSITORY=${{ vars.REPOSITORY }}
+            BASE_REPOSITORY=docker.io/${{ vars.REPOSITORY }}
             BASE_IMAGE=${{ vars.IMAGE }}
             BASE_ENVIRONMENT=base
             BASE_RELEASE=latest
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
+          cache-from: |
+            type=local,src=${{ runner.temp }}/artifacts
 
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
