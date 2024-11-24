@@ -41,12 +41,12 @@ jobs:
           push: false
           context: ./.envcontainer
           file: ./.envcontainer/Base.Dockerfile
-          tags: ${{ env.REPOSITORY }}/${{ env.IMAGE }}:base-latest
+          tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
           build-args: |
-                      BASE_REPOSITORY=${{ env.BASE_REPOSITORY }}
-                      BASE_IMAGE=${{ env.BASE_IMAGE }}
-                      BASE_ENVIRONMENT=${{ env.BASE_ENVIRONMENT }}
-                      DENO_VERSION=${{ env.DENO_VERSION }}
+                      BASE_REPOSITORY=${{ vars.BASE_REPOSITORY }}
+                      BASE_IMAGE=${{ vars.BASE_IMAGE }}
+                      BASE_ENVIRONMENT=${{ vars.BASE_ENVIRONMENT }}
+                      DENO_VERSION=${{ vars.DENO_VERSION }}
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/base-environment.tar
 
       - name: Upload Image as Artifact
@@ -88,7 +88,7 @@ jobs:
           push: false
           context: ./.envcontainer
           file: ./.envcontainer/App.Dockerfile
-          tags: ${{ env.REPOSITORY }}/${{ env.IMAGE }}:integration-latest
+          tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
 
       - name: Upload Image as Artifact
@@ -122,4 +122,4 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Push Image to Docker Hub
-        run: docker push ${{ env.REPOSITORY }}/${{ env.IMAGE }}:integration-latest
+        run: docker push ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
