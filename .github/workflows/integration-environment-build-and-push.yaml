@@ -107,6 +107,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          pull: false
           push: false
           context: ./.envcontainer
           file: ./.envcontainer/App.Dockerfile
