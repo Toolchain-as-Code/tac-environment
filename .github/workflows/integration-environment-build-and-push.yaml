@@ -38,6 +38,15 @@ jobs:
         id: setup_buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Debug Build Arguments
+        run: |
+          echo "BASE_REPOSITORY   = ${{ vars.BASE_REPOSITORY }}"
+          echo "BASE_IMAGE        = ${{ vars.BASE_IMAGE }}"
+          echo "BASE_ENVIRONMENT  = ${{ vars.BASE_ENVIRONMENT }}"
+          echo "BASE_RELEASE      = ${{ vars.BASE_RELEASE }}"
+          echo "REPOSITORY        = ${{ vars.REPOSITORY }}"
+          echo "IMAGE             = ${{ vars.IMAGE }}"
+
       - name: Build Image
         id: build
         uses: docker/build-push-action@v6
@@ -88,6 +97,11 @@ jobs:
       - name: Setup Docker Buildx
         id: setup_buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Debug Build Arguments
+        run: |
+          echo "REPOSITORY        = ${{ vars.REPOSITORY }}"
+          echo "IMAGE             = ${{ vars.IMAGE }}"
 
       - name: Build Image
         id: build
