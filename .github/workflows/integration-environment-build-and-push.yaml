@@ -31,11 +31,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Artifact Directory
-        id: create_artifact_dir_base
+        id: create_artifact_dir
         run: mkdir -p ${{ runner.temp }}/artifacts
 
       - name: Setup Docker Buildx
-        id: setup_buildx_base
+        id: setup_buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Image
@@ -47,10 +47,10 @@ jobs:
           file: ./.envcontainer/Base.Dockerfile
           tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
           build-args: |
-                      BASE_REPOSITORY=${{ vars.BASE_REPOSITORY }}
-                      BASE_IMAGE=${{ vars.BASE_IMAGE }}
-                      BASE_ENVIRONMENT=${{ vars.BASE_ENVIRONMENT }}
-                      DENO_VERSION=${{ vars.DENO_VERSION }}
+            BASE_REPOSITORY=${{ vars.BASE_REPOSITORY }}
+            BASE_IMAGE=${{ vars.BASE_IMAGE }}
+            BASE_ENVIRONMENT=${{ vars.BASE_ENVIRONMENT }}
+            DENO_VERSION=${{ vars.DENO_VERSION }}
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/base-environment.tar
 
       - name: Upload Image as Artifact
@@ -77,16 +77,16 @@ jobs:
           path: ${{ runner.temp }}/artifacts
 
       - name: Load Image from Artifact
-        run:  |
-              docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
-              docker image ls -a
+        run: |
+          docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
+          docker image ls -a
 
       - name: Create Artifact Directory
-        id: create_artifact_dir_integration
+        id: create_artifact_dir
         run: mkdir -p ${{ runner.temp }}/artifacts
 
       - name: Setup Docker Buildx
-        id: setup_buildx_integration
+        id: setup_buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Image
@@ -119,9 +119,9 @@ jobs:
           path: ${{ runner.temp }}/artifacts
 
       - name: Load Image from Artifact
-        run:  |
-              docker load --input ${{ runner.temp }}/artifacts/integration-environment.tar
-              docker image ls -a
+        run: |
+          docker load --input ${{ runner.temp }}/artifacts/integration-environment.tar
+          docker image ls -a
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
