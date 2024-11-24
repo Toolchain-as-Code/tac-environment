@@ -118,6 +118,8 @@ jobs:
             BASE_ENVIRONMENT=base
             BASE_RELEASE=latest
           outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
+          cache-from: |
+            type=local,src=${{ runner.temp }}/artifacts
 
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
