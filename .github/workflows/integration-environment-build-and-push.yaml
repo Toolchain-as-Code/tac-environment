@@ -37,7 +37,7 @@ jobs:
 
       - name: Debug Build Arguments
         run: |
-          echo "REPOSITORY        = docker.io/${{ vars.REPOSITORY }}"
+          echo "REPOSITORY        = ${{ vars.REPOSITORY }}"
           echo "IMAGE             = ${{ vars.IMAGE }}"
 
       - name: Build Image
@@ -50,7 +50,7 @@ jobs:
           file: ./.envcontainer/App.Dockerfile
           tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:integration-latest
           build-args: |
-            BASE_REPOSITORY=docker.io/${{ vars.REPOSITORY }}
+            BASE_REPOSITORY=${{ vars.REPOSITORY }}
             BASE_IMAGE=${{ vars.IMAGE }}
             BASE_ENVIRONMENT=base
             BASE_RELEASE=latest
