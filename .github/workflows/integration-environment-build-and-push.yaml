@@ -32,7 +32,7 @@ jobs:
 
       - name: Create Artifact Directory
         id: create_artifact_dir_base
-        run: mkdir -p /artifacts
+        run: mkdir -p ${{ runner.temp }}/artifacts
 
       - name: Build Image
         id: build
@@ -47,13 +47,13 @@ jobs:
                       BASE_IMAGE=${{ env.BASE_IMAGE }}
                       BASE_ENVIRONMENT=${{ env.BASE_ENVIRONMENT }}
                       DENO_VERSION=${{ env.DENO_VERSION }}
-          outputs: type=docker,dest=/artifacts/base-environment.tar
+          outputs: type=docker,dest=${{ runner.temp }}/artifacts/base-environment.tar
 
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: base-environment
-          path: /artifacts/base-environment.tar
+          path: ${{ runner.temp }}/artifacts/base-environment.tar
 
   build:
     name: Build Integration Environment
@@ -70,16 +70,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: base-environment
-          path: /artifacts
+          path: ${{ runner.temp }}/artifacts
 
       - name: Load Image from Artifact
         run:  |
-              docker load --input /artifacts/base-environment.tar
+              docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
               docker image ls -a
 
       - name: Create Artifact Directory
         id: create_artifact_dir_integration
-        run: mkdir -p /artifacts
+        run: mkdir -p ${{ runner.temp }}/artifacts
 
       - name: Build Image
         id: build
@@ -89,13 +89,13 @@ jobs:
           context: ./.envcontainer
           file: ./.envcontainer/App.Dockerfile
           tags: ${{ env.REPOSITORY }}/${{ env.IMAGE }}:integration-latest
-          outputs: type=docker,dest=/artifacts/integration-environment.tar
+          outputs: type=docker,dest=${{ runner.temp }}/artifacts/integration-environment.tar
 
       - name: Upload Image as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: integration-environment
-          path: /artifacts/integration-environment.tar
+          path: ${{ runner.temp }}/artifacts/integration-environment.tar
 
   push:
     name: Push Integration Environment
@@ -108,11 +108,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: integration-environment
-          path: /artifacts
+          path: ${{ runner.temp }}/artifacts
 
       - name: Load Image from Artifact
         run:  |
-              docker load --input /artifacts/integration-environment.tar
+              docker load --input ${{ runner.temp }}/artifacts/integration-environment.tar
               docker image ls -a
 
       - name: Login to Docker Hub
