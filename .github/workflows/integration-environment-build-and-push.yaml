@@ -30,6 +30,10 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: Create Artifact Directory
+        id: create_artifact_dir_base
+        run: mkdir -p /artifacts
+
       - name: Build Image
         id: build
         uses: docker/build-push-action@v6
@@ -72,6 +76,10 @@ jobs:
         run:  |
               docker load --input /artifacts/base-environment.tar
               docker image ls -a
+
+      - name: Create Artifact Directory
+        id: create_artifact_dir_integration
+        run: mkdir -p /artifacts
 
       - name: Build Image
         id: build
