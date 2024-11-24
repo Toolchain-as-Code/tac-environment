@@ -1,0 +1,107 @@
+############################################################
+############## Workflow: Image Build and Push ##############
+################### CREATION ENVIRONMENT ###################
+############################################################
+
+########## AUTHOR:  Jan Rother
+########## DATE:    2024-12
+########## VERSION: 1.0
+
+name: Creation Environment
+
+on:
+  workflow_run:
+    workflows: ["Base Environment"]
+    types:
+      - completed
+
+jobs:
+  build:
+    name: Build Creation Environment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        id: setup_buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create Artifact Directory
+        id: create_artifact_dir
+        run: mkdir -p ${{ runner.temp }}/artifacts
+
+      - name: Debug Build Arguments
+        run: |
+          echo "REPOSITORY        = ${{ vars.REPOSITORY }}"
+          echo "IMAGE             = ${{ vars.IMAGE }}"
+
+      - name: Build Image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          pull: false
+          push: false
+          context: ./.envcontainer
+          file: ./.envcontainer/Dev.Dockerfile
+          tags: ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:creation-latest
+          build-args: |
+            BASE_REPOSITORY=${{ vars.REPOSITORY }}
+            BASE_IMAGE=${{ vars.IMAGE }}
+            BASE_ENVIRONMENT=base
+            BASE_RELEASE=latest
+          outputs: type=docker,dest=${{ runner.temp }}/artifacts/creation-environment.tar
+
+      - name: Upload Image as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: creation-environment
+          path: ${{ runner.temp }}/artifacts/creation-environment.tar
+
+  push:
+    name: Push Creation Environment
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+    steps:
+      - name: Download Image as Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: creation-environment
+          path: ${{ runner.temp }}/artifacts
+
+      - name: Load Image from Artifact
+        run: |
+          docker load --input ${{ runner.temp }}/artifacts/creation-environment.tar
+          docker image ls -a
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Push Image to Docker Hub
+        run: docker push ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:creation-latest
+
+  cancel:
+    name: Cancel Creation Environment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Display Cancel Message
+        run: |
+          echo "Workflow run 'Build and Push of Base Environment' failed."
+          echo "Base Environment is required for Creation Environment."
+          echo "========================================================="
+          echo "INFO: Creation Environment canceled."
+
+      - name: Cancel Workflow
+        run: exit 0
