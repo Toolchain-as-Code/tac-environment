@@ -94,6 +94,11 @@ jobs:
           docker load --input ${{ runner.temp }}/artifacts/base-environment.tar
           docker image ls -a
 
+      - name: Re-Tag Image from Artifact
+        run: |
+          docker tag ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest ${{ vars.REPOSITORY }}/${{ vars.IMAGE }}:base-latest
+          docker image ls -a
+
       - name: Create Artifact Directory
         id: create_artifact_dir
         run: mkdir -p ${{ runner.temp }}/artifacts
