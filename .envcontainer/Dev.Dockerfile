@@ -26,6 +26,10 @@ RUN apt update && apt update && apt install -y \
     zip \
     && apt clean
 
+# |----------------------- Dotfiles -----------------------|
+RUN bash -c  \
+    "$(curl -#fL https://raw.githubusercontent.com/Toolchain-as-Code/tac-dotfiles/refs/heads/main/install.sh)"
+
 # |--------------------- Customization --------------------|
 # None.
 
